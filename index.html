@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MangaFlex - Manga Reader</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header/ActionBar -->
+    <header class="app-header">
+        <div class="header-content">
+            <h1 class="app-title">
+                <span class="material-icons">menu_book</span>
+                MangaFlex
+            </h1>
+            <div class="header-actions">
+                <button class="icon-button" id="searchBtn" title="Search">
+                    <span class="material-icons">search</span>
+                </button>
+                <button class="icon-button" id="settingsBtn" title="Settings">
+                    <span class="material-icons">settings</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Search Bar (Hidden by default) -->
+        <div class="search-bar" id="searchBar">
+            <input type="text" placeholder="Search manga..." id="searchInput">
+            <button class="icon-button" id="closeSearchBtn">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" data-category="trending">
+            <span class="material-icons">local_fire_department</span>
+            <span class="nav-label">Trending</span>
+        </button>
+        <button class="nav-item" data-category="latest">
+            <span class="material-icons">update</span>
+            <span class="nav-label">Latest</span>
+        </button>
+        <button class="nav-item" data-category="popular">
+            <span class="material-icons">favorite</span>
+            <span class="nav-label">Popular</span>
+        </button>
+        <button class="nav-item" data-category="genres">
+            <span class="material-icons">category</span>
+            <span class="nav-label">Genres</span>
+        </button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Loading State -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Loading manga...</p>
+        </div>
+
+        <!-- Content Container -->
+        <div class="content-container" id="contentContainer">
+            <!-- Manga Grid will be populated here -->
+        </div>
+
+        <!-- Error State -->
+        <div class="error-state" id="errorState" style="display: none;">
+            <span class="material-icons">error_outline</span>
+            <p id="errorMessage">Failed to load manga. Please try again.</p>
+            <button class="btn-primary" onclick="location.reload()">Retry</button>
+        </div>
+    </main>
+
+    <!-- Floating Action Button -->
+    <button class="fab" id="fab" title="Read Random Manga">
+        <span class="material-icons">shuffle</span>
+    </button>
+
+    <!-- Modal for Manga Details -->
+    <div class="modal" id="mangaModal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">
+                <span class="material-icons">close</span>
+            </button>
+            <div class="modal-body" id="modalBody">
+                <!-- Manga details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header">
+            <h2>Settings</h2>
+            <button class="icon-button" id="closeSettingsBtn">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <div class="settings-content">
+            <div class="setting-item">
+                <label>Theme</label>
+                <select id="themeSelect">
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <label>API Source</label>
+                <select id="apiSelect">
+                    <option value="mangadex">MangaDex</option>
+                    <option value="jikan">Jikan API</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
