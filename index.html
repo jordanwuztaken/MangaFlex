@@ -17,6 +17,9 @@
                 MangaFlex
             </h1>
             <div class="header-actions">
+                <button class="icon-button" id="themeToggle" title="Toggle Dark Mode">
+                    <span class="material-icons">brightness_4</span>
+                </button>
                 <button class="icon-button" id="searchBtn" title="Search">
                     <span class="material-icons">search</span>
                 </button>
@@ -49,9 +52,9 @@
             <span class="material-icons">favorite</span>
             <span class="nav-label">Popular</span>
         </button>
-        <button class="nav-item" data-category="genres">
-            <span class="material-icons">category</span>
-            <span class="nav-label">Genres</span>
+        <button class="nav-item" data-category="upcoming">
+            <span class="material-icons">calendar_month</span>
+            <span class="nav-label">Upcoming</span>
         </button>
     </nav>
 
@@ -103,17 +106,10 @@
         </div>
         <div class="settings-content">
             <div class="setting-item">
-                <label>Theme</label>
-                <select id="themeSelect">
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
-                </select>
-            </div>
-            <div class="setting-item">
                 <label>API Source</label>
                 <select id="apiSelect">
+                    <option value="jikan">Jikan API (MAL)</option>
                     <option value="mangadex">MangaDex</option>
-                    <option value="jikan">Jikan API</option>
                 </select>
             </div>
         </div>

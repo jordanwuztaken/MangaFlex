@@ -35,7 +35,7 @@ const closeSearchBtn = document.getElementById('closeSearchBtn');
 const settingsBtn = document.getElementById('settingsBtn');
 const closeSettingsBtn = document.getElementById('closeSettingsBtn');
 const modalClose = document.getElementById('modalClose');
-const themeSelect = document.getElementById('themeSelect');
+const themeToggle = document.getElementById('themeToggle');
 const apiSelect = document.getElementById('apiSelect');
 
 // Initialize
@@ -49,14 +49,13 @@ document.addEventListener('DOMContentLoaded', () => {
 function initTheme() {
     if (currentTheme === 'dark') {
         document.body.classList.add('dark-theme');
-        themeSelect.value = 'dark';
     }
 }
 
-function toggleTheme(theme) {
-    currentTheme = theme;
-    localStorage.setItem('theme', theme);
-    if (theme === 'dark') {
+function toggleTheme() {
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('theme', currentTheme);
+    if (currentTheme === 'dark') {
         document.body.classList.add('dark-theme');
     } else {
         document.body.classList.remove('dark-theme');
@@ -69,6 +68,9 @@ function setupEventListeners() {
     navItems.forEach(item => {
         item.addEventListener('click', handleNavClick);
     });
+
+    // Theme Toggle
+    themeToggle.addEventListener('click', toggleTheme);
 
     // Search
     searchBtn.addEventListener('click', () => {
@@ -98,10 +100,6 @@ function setupEventListeners() {
         settingsPanel.classList.remove('active');
     });
 
-    themeSelect.addEventListener('change', (e) => {
-        toggleTheme(e.target.value);
-    });
-
     apiSelect.addEventListener('change', (e) => {
         CONFIG.CURRENT_API = e.target.value;
         currentPage = 1;
@@ -121,9 +119,6 @@ function setupEventListeners() {
     document.addEventListener('click', (e) => {
         if (!settingsPanel.contains(e.target) && e.target !== settingsBtn) {
             settingsPanel.classList.remove('active');
-        }
-        if (!searchBar.contains(e.target) && e.target !== searchBtn) {
-            // Optionally close search bar
         }
     });
 }
@@ -163,9 +158,9 @@ async function loadManga() {
 async function fetchFromJikan() {
     const endpoints = {
         trending: '/top/manga?type=manga&filter=bypopularity',
-        latest: '/seasons/now',
+        latest: '/top/manga?type=manga&filter=publishing',
         popular: '/top/manga?type=manga&filter=airing',
-        genres: '/genres/manga'
+        upcoming: '/top/manga?type=manga&filter=upcoming'
     };
 
     const endpoint = endpoints[currentCategory] || endpoints.trending;
@@ -175,11 +170,6 @@ async function fetchFromJikan() {
     if (!response.ok) throw new Error('API request failed');
     
     const data = await response.json();
-    
-    if (currentCategory === 'genres') {
-        return formatGenreData(data.data);
-    }
-    
     return formatJikanData(data.data);
 }
 
@@ -204,16 +194,22 @@ async function fetchFromMangaDex() {
 function formatJikanData(items) {
     if (!items) return [];
     
-    return items.slice(0, CONFIG.PAGE_SIZE).map(item => ({
-        id: item.mal_id,
-        title: item.title || 'Unknown',
-        image: item.images?.jpg?.image_url || 'https://via.placeholder.com/300x450?text=No+Image',
-        rating: item.score || 0,
-        synopsis: item.synopsis || 'No description available',
-        chapters: item.chapters || 'Unknown',
-        authors: item.authors?.map(a => a.name).join(', ') || 'Unknown',
-        genres: item.genres?.map(g => g.name).join(', ') || 'Various',
-    }));
+    return items.slice(0, CONFIG.PAGE_SIZE).map(item => {
+        const authors = item.authors?.map(a => a.name).join(', ') || 'Unknown';
+        const genres = item.genres?.map(g => g.name).join(', ') || 'Various';
+        
+        return {
+            id: item.mal_id,
+            title: item.title || 'Unknown',
+            image: item.images?.jpg?.image_url || 'https://via.placeholder.com/300x450?text=No+Image',
+            rating: item.score || 0,
+            synopsis: item.synopsis || 'No description available',
+            chapters: item.chapters || 'Unknown',
+            authors: authors,
+            genres: genres,
+            status: item.status || 'Unknown'
+        };
+    });
 }
 
 function formatMangaDexData(items) {
@@ -227,20 +223,9 @@ function formatMangaDexData(items) {
             synopsis: item.attributes?.description?.en || 'No description available',
             authors: 'Various',
             genres: item.attributes?.tags?.map(t => t.attributes.name.en).join(', ') || 'Various',
+            status: 'Unknown'
         };
     });
-}
-
-function formatGenreData(genres) {
-    return genres.slice(0, CONFIG.PAGE_SIZE).map((genre, index) => ({
-        id: genre.mal_id,
-        title: genre.name,
-        image: `https://via.placeholder.com/300x450?text=${encodeURIComponent(genre.name)}`,
-        rating: Math.random() * 10,
-        synopsis: `Manga in the ${genre.name} genre`,
-        authors: 'Various',
-        genres: genre.name,
-    }));
 }
 
 async function searchManga(query) {
@@ -318,14 +303,20 @@ function showMangaDetail(manga) {
                 <span>${manga.rating.toFixed(1)}/10</span>
             </div>
             <div class="manga-detail-info-item">
-                <span class="manga-detail-info-label">Chapters</span>
-                <span>${manga.chapters}</span>
+                <span class="manga-detail-info-label">Status</span>
+                <span>${manga.status}</span>
             </div>
         </div>
         <div class="manga-detail-info">
             <div class="manga-detail-info-item" style="flex: 1;">
                 <span class="manga-detail-info-label">Genres</span>
                 <span>${manga.genres}</span>
+            </div>
+        </div>
+        <div class="manga-detail-info">
+            <div class="manga-detail-info-item" style="flex: 1;">
+                <span class="manga-detail-info-label">Authors</span>
+                <span>${manga.authors}</span>
             </div>
         </div>
         <div class="manga-detail-description">${manga.synopsis}</div>
