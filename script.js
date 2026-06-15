@@ -1,10 +1,6 @@
 // Configuration
 const CONFIG = {
     API_SOURCES: {
-        mangadex: {
-            base: 'https://api.mangadex.org',
-            cors: 'https://cors-anywhere.herokuapp.com/',
-        },
         jikan: {
             base: 'https://api.jikan.moe/v4',
         }
@@ -19,6 +15,9 @@ let currentPage = 1;
 let allManga = [];
 let currentTheme = localStorage.getItem('theme') || 'light';
 let currentMangaReading = null;
+let currentVolume = 1;
+let currentPageNum = 1;
+let totalPages = 100;
 
 // DOM Elements
 const contentContainer = document.getElementById('contentContainer');
@@ -26,6 +25,11 @@ const loading = document.getElementById('loading');
 const errorState = document.getElementById('errorState');
 const mangaModal = document.getElementById('mangaModal');
 const modalBody = document.getElementById('modalBody');
+const readerModal = document.getElementById('readerModal');
+const readerContent = document.getElementById('readerContent');
+const readerTitle = document.getElementById('readerTitle');
+const volumeSelect = document.getElementById('volumeSelect');
+const pageCounter = document.getElementById('pageCounter');
 const settingsPanel = document.getElementById('settingsPanel');
 const fab = document.getElementById('fab');
 const navItems = document.querySelectorAll('.nav-item');
@@ -36,6 +40,9 @@ const closeSearchBtn = document.getElementById('closeSearchBtn');
 const settingsBtn = document.getElementById('settingsBtn');
 const closeSettingsBtn = document.getElementById('closeSettingsBtn');
 const modalClose = document.getElementById('modalClose');
+const closeReaderBtn = document.getElementById('closeReaderBtn');
+const prevPageBtn = document.getElementById('prevPageBtn');
+const nextPageBtn = document.getElementById('nextPageBtn');
 const themeToggle = document.getElementById('themeToggle');
 const apiSelect = document.getElementById('apiSelect');
 
@@ -101,17 +108,20 @@ function setupEventListeners() {
         settingsPanel.classList.remove('active');
     });
 
-    apiSelect.addEventListener('change', (e) => {
-        CONFIG.CURRENT_API = e.target.value;
-        currentPage = 1;
-        loadManga();
-    });
-
     // Modal
     modalClose.addEventListener('click', closeModal);
     mangaModal.addEventListener('click', (e) => {
         if (e.target === mangaModal) closeModal();
     });
+
+    // Reader
+    closeReaderBtn.addEventListener('click', closeReader);
+    readerModal.addEventListener('click', (e) => {
+        if (e.target === readerModal) closeReader();
+    });
+    prevPageBtn.addEventListener('click', previousPage);
+    nextPageBtn.addEventListener('click', nextPage);
+    volumeSelect.addEventListener('change', changeVolume);
 
     // FAB
     fab.addEventListener('click', loadRandomManga);
@@ -140,12 +150,7 @@ async function loadManga() {
     showLoading();
     try {
         let manga = [];
-        
-        if (CONFIG.CURRENT_API === 'jikan') {
-            manga = await fetchFromJikan();
-        } else if (CONFIG.CURRENT_API === 'mangadex') {
-            manga = await fetchFromMangaDex();
-        }
+        manga = await fetchFromJikan();
         
         allManga = manga;
         renderManga(manga);
@@ -159,8 +164,8 @@ async function loadManga() {
 async function fetchFromJikan() {
     const endpoints = {
         trending: '/top/manga?type=manga&filter=bypopularity',
-        latest: '/top/manga?type=manga&filter=publishing',
-        popular: '/top/manga?type=manga&filter=airing',
+        airing: '/top/manga?type=manga&filter=airing',
+        bypopularity: '/top/manga?type=manga&filter=bypopularity',
         upcoming: '/top/manga?type=manga&filter=upcoming'
     };
 
@@ -172,23 +177,6 @@ async function fetchFromJikan() {
     
     const data = await response.json();
     return formatJikanData(data.data);
-}
-
-async function fetchFromMangaDex() {
-    // MangaDex API example (note: may require CORS proxy in browser)
-    const params = new URLSearchParams({
-        limit: CONFIG.PAGE_SIZE,
-        offset: (currentPage - 1) * CONFIG.PAGE_SIZE,
-        order: currentCategory === 'latest' ? '[updatedAt]=desc' : '[rating]=desc'
-    });
-
-    const url = `${CONFIG.API_SOURCES.mangadex.base}/manga?${params}`;
-    
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('API request failed');
-    
-    const data = await response.json();
-    return formatMangaDexData(data.data);
 }
 
 // Data Formatting
@@ -208,25 +196,7 @@ function formatJikanData(items) {
             chapters: item.chapters || 'Unknown',
             authors: authors,
             genres: genres,
-            status: item.status || 'Unknown',
-            url: item.url || '#'
-        };
-    });
-}
-
-function formatMangaDexData(items) {
-    return items.map(item => {
-        const title = item.attributes?.title?.en || 'Unknown';
-        return {
-            id: item.id,
-            title: title,
-            image: `https://uploads.mangadex.org/covers/${item.id}/placeholder.jpg`,
-            rating: Math.random() * 10,
-            synopsis: item.attributes?.description?.en || 'No description available',
-            authors: 'Various',
-            genres: item.attributes?.tags?.map(t => t.attributes.name.en).join(', ') || 'Various',
-            status: 'Unknown',
-            url: `https://mangadex.org/title/${item.id}`
+            status: item.status || 'Unknown'
         };
     });
 }
@@ -324,16 +294,92 @@ function showMangaDetail(manga) {
             </div>
         </div>
         <div class="manga-detail-description">${manga.synopsis}</div>
-        <button class="btn-primary" onclick="readManga()">Read Now</button>
+        <button class="btn-primary" onclick="startReading()">Read Now</button>
     `;
     
     mangaModal.classList.add('active');
 }
 
-function readManga() {
-    if (currentMangaReading && currentMangaReading.url) {
-        window.open(currentMangaReading.url, '_blank');
+function startReading() {
+    closeModal();
+    // Initialize reader
+    currentVolume = 1;
+    currentPageNum = 1;
+    totalPages = 50 + Math.floor(Math.random() * 100); // Random pages
+    
+    readerTitle.textContent = currentMangaReading.title;
+    
+    // Populate volumes
+    volumeSelect.innerHTML = '<option value="">Select Volume</option>';
+    const numVolumes = Math.max(1, Math.floor(Number(currentMangaReading.chapters) / 10) || 5);
+    for (let i = 1; i <= numVolumes; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = `Volume ${i}`;
+        volumeSelect.appendChild(option);
     }
+    volumeSelect.value = 1;
+    
+    displayPage();
+    readerModal.classList.add('active');
+}
+
+function displayPage() {
+    // Generate page content (mock pages with chapter content)
+    const chapters = currentMangaReading.synopsis;
+    readerContent.innerHTML = `
+        <div class="manga-page">
+            <div class="page-content">
+                <div class="page-header">
+                    <h3>Volume ${currentVolume}</h3>
+                    <p class="chapter-title">Chapter ${(currentVolume - 1) * 10 + Math.ceil(currentPageNum / 5)}</p>
+                </div>
+                <div class="page-body">
+                    <div class="manga-panels">
+                        <div class="panel panel-1"></div>
+                        <div class="panel panel-2"></div>
+                        <div class="panel panel-3"></div>
+                        <div class="panel panel-4"></div>
+                    </div>
+                    <div class="page-text">
+                        ${chapters.substring(0, 300)}...
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    pageCounter.textContent = `Page ${currentPageNum} / ${totalPages}`;
+    prevPageBtn.disabled = currentPageNum === 1;
+    nextPageBtn.disabled = currentPageNum === totalPages;
+}
+
+function nextPage() {
+    if (currentPageNum < totalPages) {
+        currentPageNum++;
+        displayPage();
+    }
+}
+
+function previousPage() {
+    if (currentPageNum > 1) {
+        currentPageNum--;
+        displayPage();
+    }
+}
+
+function changeVolume() {
+    const vol = volumeSelect.value;
+    if (vol) {
+        currentVolume = parseInt(vol);
+        currentPageNum = 1;
+        totalPages = 50 + Math.floor(Math.random() * 100);
+        displayPage();
+    }
+}
+
+function closeReader() {
+    readerModal.classList.remove('active');
 }
 
 function closeModal() {
