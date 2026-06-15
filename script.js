@@ -18,6 +18,7 @@ let currentCategory = 'trending';
 let currentPage = 1;
 let allManga = [];
 let currentTheme = localStorage.getItem('theme') || 'light';
+let currentMangaReading = null;
 
 // DOM Elements
 const contentContainer = document.getElementById('contentContainer');
@@ -207,7 +208,8 @@ function formatJikanData(items) {
             chapters: item.chapters || 'Unknown',
             authors: authors,
             genres: genres,
-            status: item.status || 'Unknown'
+            status: item.status || 'Unknown',
+            url: item.url || '#'
         };
     });
 }
@@ -223,7 +225,8 @@ function formatMangaDexData(items) {
             synopsis: item.attributes?.description?.en || 'No description available',
             authors: 'Various',
             genres: item.attributes?.tags?.map(t => t.attributes.name.en).join(', ') || 'Various',
-            status: 'Unknown'
+            status: 'Unknown',
+            url: `https://mangadex.org/title/${item.id}`
         };
     });
 }
@@ -294,6 +297,7 @@ function createMangaCard(manga) {
 }
 
 function showMangaDetail(manga) {
+    currentMangaReading = manga;
     modalBody.innerHTML = `
         <img src="${manga.image}" alt="${manga.title}" class="manga-detail-poster" onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'">
         <h2 class="manga-detail-title">${manga.title}</h2>
@@ -320,10 +324,16 @@ function showMangaDetail(manga) {
             </div>
         </div>
         <div class="manga-detail-description">${manga.synopsis}</div>
-        <button class="btn-primary">Read Now</button>
+        <button class="btn-primary" onclick="readManga()">Read Now</button>
     `;
     
     mangaModal.classList.add('active');
+}
+
+function readManga() {
+    if (currentMangaReading && currentMangaReading.url) {
+        window.open(currentMangaReading.url, '_blank');
+    }
 }
 
 function closeModal() {
