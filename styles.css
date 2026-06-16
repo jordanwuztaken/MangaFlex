@@ -182,7 +182,7 @@ body {
     }
 }
 
-/* Manga Card (Movie Poster Format) */
+/* Manga Card */
 .manga-card {
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -229,7 +229,7 @@ body {
     transition: opacity 0.2s ease;
 }
 
-.manga-card:active .manga-overlay {
+.manga-card:hover .manga-overlay, .manga-card:active .manga-overlay {
     opacity: 1;
 }
 
@@ -277,9 +277,7 @@ body {
 }
 
 @keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+    to { transform: rotate(360deg); }
 }
 
 .loading p {
@@ -307,7 +305,7 @@ body {
     font-size: 16px;
 }
 
-/* Floating Action Button */
+/* FAB */
 .fab {
     position: fixed;
     bottom: 72px;
@@ -329,7 +327,6 @@ body {
 
 .fab:active {
     transform: scale(0.9);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.08);
 }
 
 /* Modal */
@@ -376,12 +373,7 @@ body {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    transition: background-color 0.2s ease;
     z-index: 10;
-}
-
-.modal-close:active {
-    background-color: var(--border-color);
 }
 
 .modal-body {
@@ -441,11 +433,6 @@ body {
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.btn-primary:active {
-    background-color: var(--primary-dark);
 }
 
 /* Manga Reader */
@@ -508,21 +495,22 @@ body {
     overflow-y: auto;
     padding: 16px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     background-color: var(--background);
+    min-height: 0;
 }
 
 .manga-page {
     width: 100%;
-    height: 100%;
+    max-width: 800px;
+    min-height: 100%;
     background-color: var(--surface);
     border-radius: 8px;
     padding: 20px;
     box-shadow: var(--shadow);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
 }
 
 .page-content {
@@ -551,7 +539,6 @@ body {
 
 .page-body {
     flex: 1;
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -564,15 +551,22 @@ body {
 }
 
 .panel {
-    aspect-ratio: 4 / 6;
+    width: 100%;
+    min-height: 220px;
+    aspect-ratio: 4 / 3;
     background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
     border: 1px solid var(--border-color);
     border-radius: 4px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     animation: fadeIn 0.3s ease-in;
 }
 
 body.dark-theme .panel {
     background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+    background-size: cover;
+    background-position: center;
 }
 
 .page-text {
